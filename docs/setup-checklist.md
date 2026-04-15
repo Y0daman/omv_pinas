@@ -1,50 +1,57 @@
-# Setup-checklista: Raspberry Pi 5 + OMV
+# Setup checklist: Raspberry Pi 5 + OMV
 
-## 1) Förberedelse
+## 1) Preparation
 
-- Flasha Raspberry Pi OS Lite 64-bit (Bookworm)
-- Aktivera SSH i Raspberry Pi Imager
-- Sätt hostname (t.ex. `omv-pi`)
-- Boota Pi och anslut via SSH
+- Flash Raspberry Pi OS Lite 64-bit (Bookworm)
+- Enable SSH in Raspberry Pi Imager
+- Set hostname (for example `omv-pi`)
+- Boot the Pi and connect via SSH
 
-## 2) Basinstallation
+## 2) Base installation
 
-Kör i ordning:
+Run in this order:
 
 ```bash
 ./scripts/00-preflight.sh
+./scripts/01-hw-preflight.sh
 sudo reboot
 ./scripts/10-install-omv.sh
 ./scripts/20-install-omv-extras.sh
 ```
 
-## 3) OMV webbgränssnitt
+## 3) OMV web UI
 
-- Gå till `http://<PI-IP>/`
-- Byt admin-lösenord
-- Verifiera tidszon/NTP
+- Go to `http://<PI-IP>/`
+- Change the admin password
+- Verify timezone/NTP
 
-## 4) Diskar och filsystem
+## 4) Disks and filesystems
 
-- Storage -> Disks: kontrollera att diskar syns
-- Storage -> File Systems: skapa (ext4 rekommenderas)
-- Montera filsystem
-- Skapa shared folders
+- Storage -> Disks: verify all drives are visible
+- Storage -> File Systems: create filesystems (ext4 recommended)
+- Mount filesystems
+- Create shared folders
 
-## 5) Delning och användare
+## 5) Sharing and users
 
-- Users -> skapa användare
-- Services -> SMB/CIFS -> aktivera och skapa shares
-- (Valfritt) NFS för Linux-klienter
+- Users -> create user accounts
+- Services -> SMB/CIFS -> enable and create shares
+- (Optional) NFS for Linux clients
 
-## 6) Hälsa och backup
+## 6) Health and backup
 
-- Storage -> SMART -> aktivera monitorering
-- Scheduled Jobs -> scrub/smart self-tests
-- Notifieringar via e-post/SMTP
-- Backup av kritisk data till extern disk eller annan nod
+- Storage -> SMART -> enable monitoring
+- Scheduled Jobs -> scrub and SMART self-tests
+- Configure notifications via email/SMTP
+- Back up critical data to an external disk or another node
 
-## 7) Appar (valfritt)
+## 7) Apps (optional)
 
-- Installera Compose-plugin via OMV-Extras
-- Kör appar från `apps/compose/`
+- Install the Compose plugin via OMV-Extras
+- Run apps from `apps/compose/`
+
+## 8) Operational knowledge and runbooks
+
+- Hardware notes: `docs/hardware/fnk0107-notes.md`
+- GitHub auth/credentials: `docs/github/credentials-and-auth.md`
+- Agent Skills: `.agents/skills/`

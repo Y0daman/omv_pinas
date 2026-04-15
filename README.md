@@ -1,17 +1,17 @@
 # OMV Pi NAS (Raspberry Pi 5)
 
-Detta repo innehåller återanvändbara script och app-definitioner för att sätta upp en Raspberry Pi 5 som NAS med OpenMediaVault (OMV).
+This repo contains reusable scripts, app definitions, and Agent Skills for building a Raspberry Pi 5 NAS with OpenMediaVault (OMV).
 
-## Målbild
+## Target setup
 
-- Bas-OS: Raspberry Pi OS Lite 64-bit (Bookworm) eller Debian 12
-- NAS-lager: OpenMediaVault 7
-- Tillägg: OMV-Extras (Compose, extra plugins)
-- Appar: Docker Compose-filer i `apps/`
+- Base OS: Raspberry Pi OS Lite 64-bit (Bookworm) or Debian 12
+- NAS layer: OpenMediaVault
+- Add-ons: OMV-Extras (Compose, additional plugins)
+- Apps: Docker Compose files in `apps/`
 
-## Snabbstart
+## Quick start
 
-Kör på en nyinstallerad Pi (SSH inloggad som användare med sudo):
+Run this on a freshly installed Pi (SSH as a sudo-enabled user):
 
 ```bash
 git clone https://github.com/Y0daman/omv_pinas.git
@@ -23,27 +23,30 @@ chmod +x scripts/*.sh
 ./scripts/20-install-omv-extras.sh
 ```
 
-Efter installation:
+After installation:
 
-1. Logga in i OMV webbgränssnitt: `http://<PI-IP>/`
-2. Sätt statisk IP (rekommenderas)
-3. Lägg till disk(ar), skapa filsystem, montera
-4. Skapa delningar (SMB/NFS) och användare
-5. Aktivera SMART, scrub och notifieringar
+1. Log in to the OMV web UI: `http://<PI-IP>/`
+2. Set a static IP (recommended)
+3. Add disks, create filesystems, mount
+4. Create shares (SMB/NFS) and users
+5. Enable SMART, scrub, and notifications
 
-## Repo-struktur
+## Repository structure
 
-- `scripts/` - automatisering för installation och grundkonfig
-- `apps/` - Compose-appar som kan köras via OMV Compose-plugin eller Docker CLI
-- `docs/` - manualer/checklistor
+- `scripts/` - install and baseline automation
+- `apps/` - Compose apps runnable via OMV Compose plugin or Docker CLI
+- `docs/` - manuals and checklists
+- `.agents/skills/` - Agent Skills following the agentskills.io specification
 
-## Viktiga råd
+## Important notes
 
-- Kör detta på ren installation för att undvika konflikter.
-- Anslut USB/SATA-diskar med egen strömförsörjning.
-- Använd helst UPS om du kör RAID/mer kritiska data.
-- Backup först, experimentera sedan.
+- Run on a clean OS install to avoid conflicts.
+- Use externally powered USB/SATA storage when possible.
+- Prefer a UPS if you run RAID or store critical data.
+- Back up first, then experiment.
 
-## Nästa steg
+## Next steps
 
-Se `docs/setup-checklist.md` för hela ordningen från SD-flash till färdig NAS.
+See `docs/setup-checklist.md` for the full order from image flashing to a working NAS.
+
+For agent-driven operations and reusable runbooks, see `.agents/README.md`.
