@@ -18,6 +18,8 @@ Run in this order:
 sudo reboot
 ./scripts/10-install-omv.sh
 ./scripts/20-install-omv-extras.sh
+# Optional
+./scripts/30-install-webmin-cockpit.sh
 ```
 
 - OMV install script uses the official endpoint: `https://get.openmediavault.io`

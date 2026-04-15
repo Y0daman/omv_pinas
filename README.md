@@ -24,6 +24,8 @@ chmod +x scripts/*.sh
 sudo reboot
 ./scripts/10-install-omv.sh
 ./scripts/20-install-omv-extras.sh
+# Optional: additional admin panels
+./scripts/30-install-webmin-cockpit.sh
 ```
 
 Notes:
@@ -31,6 +33,7 @@ Notes:
 - `scripts/10-install-omv.sh` uses the official installer (`https://get.openmediavault.io`).
 - `scripts/05-preinstall-flash.sh` applies SD-write reduction defaults.
 - `scripts/20-install-omv-extras.sh` attempts to install `openmediavault-writecache`.
+- `scripts/30-install-webmin-cockpit.sh` installs Cockpit (`:9090`) and Webmin (`:10000`).
 
 After installation:
 
