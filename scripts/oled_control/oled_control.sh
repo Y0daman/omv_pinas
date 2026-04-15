@@ -75,16 +75,20 @@ restart_oled_task() {
 
 map_pages_to_python_list() {
   local pages_csv="$1"
-  local py="[]"
+  local out=""
   IFS=',' read -r -a arr <<<"$pages_csv"
   for p in "${arr[@]}"; do
     p="${p// /}"
     case "$p" in
-      time) py="${py%]} , 'time']" ;;
-      usage) py="${py%]} , 'usage']" ;;
-      temp) py="${py%]} , 'temp']" ;;
-      fan) py="${py%]} , 'fan']" ;;
-      all) py="['time','usage','temp','fan']" ;;
+      time|usage|temp|fan)
+        if [[ -n "$out" ]]; then
+          out+=" ,"
+        fi
+        out+="$p"
+        ;;
+      all)
+        out="time,usage,temp,fan"
+        ;;
       "") ;;
       *)
         echo "Unknown page: $p" >&2
@@ -92,7 +96,7 @@ map_pages_to_python_list() {
         ;;
     esac
   done
-  printf '%s\n' "$py"
+  printf '%s\n' "$out"
 }
 
 case "$cmd" in
@@ -190,14 +194,14 @@ PY
     shift
     set -- $(parse_flags "$@")
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
-    pages_py="$(map_pages_to_python_list "$pages")"
+    pages_csv="$(map_pages_to_python_list "$pages")"
 
     python_run_with_code_dir "$code_dir" - <<PY
 import json
 from pathlib import Path
 
 cmd = "${cmd}"
-selected = ${pages_py}
+selected = [p.strip() for p in "${pages_csv}".split(',') if p.strip()]
 
 cfg = Path("$code_dir") / "app_config.json"
 if not cfg.exists():
