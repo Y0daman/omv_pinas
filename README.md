@@ -47,6 +47,54 @@ After installation:
 - `docs/` - manuals and checklists
 - `.agents/skills/` - Agent Skills following the agentskills.io specification
 
+## Freenove hardware controls
+
+If you use the Freenove FNK0107 case board, this repo includes grouped control scripts:
+
+- `scripts/fan_control/set_fan_percent.sh`
+- `scripts/led_control/led_control.sh`
+- `scripts/oled_control/oled_control.sh`
+- `scripts/screen_control/screen_control.sh`
+
+Fan control modes:
+
+```bash
+# Manual fixed speed
+./scripts/fan_control/set_fan_percent.sh manual 60
+
+# Follow case temperature
+./scripts/fan_control/set_fan_percent.sh follow-case --low-temp 30 --high-temp 50 --low-speed 30 --mid-speed 50 --high-speed 70
+
+# Follow Raspberry Pi PWM
+./scripts/fan_control/set_fan_percent.sh follow-rpi --min-speed 20 --max-speed 100
+```
+
+LED modes include presets and temperature-follow:
+
+```bash
+# Preset colors
+./scripts/led_control/led_control.sh preset blue
+./scripts/led_control/led_control.sh preset orange
+./scripts/led_control/led_control.sh list-presets
+
+# Dynamic temperature color (blue -> red)
+./scripts/led_control/led_control.sh temp-follow --sensor cpu --cold 35 --hot 75 --interval 1
+```
+
+OLED page control:
+
+```bash
+./scripts/oled_control/oled_control.sh list
+./scripts/oled_control/oled_control.sh show usage --restart-task
+```
+
+Large screen dashboard:
+
+```bash
+./scripts/screen_control/screen_control.sh info
+./scripts/screen_control/screen_control.sh run-dashboard --backend auto
+```
+
 ## Important notes
 
 - Run on a clean OS install to avoid conflicts.
@@ -57,5 +105,7 @@ After installation:
 ## Next steps
 
 See `docs/setup-checklist.md` for the full order from image flashing to a working NAS.
+
+For Freenove hardware controls (fan/LED/OLED/screen), see `docs/hardware/freenove-controls.md`.
 
 For agent-driven operations and reusable runbooks, see `.agents/README.md`.
