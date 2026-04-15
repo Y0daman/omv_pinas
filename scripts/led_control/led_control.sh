@@ -13,6 +13,8 @@ Usage:
   led_control.sh <command> [options]
 
 Commands:
+  get
+  read
   status
   off
   rainbow
@@ -111,7 +113,34 @@ case "$cmd" in
     exit 0
     ;;
 
-  status)
+  get)
+    set -- $(parse_common_flags "$@")
+    code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
+    cfg_file="$(resolve_freenove_config_file "$code_dir")"
+
+    python3 - <<PY
+import json
+from pathlib import Path
+
+cfg = Path("${cfg_file}")
+if not cfg.exists():
+    print(f"Missing config file: {cfg}")
+    raise SystemExit(1)
+
+data = json.loads(cfg.read_text(encoding="utf-8"))
+led = data.get("LED", {})
+print(f"Config file: {cfg}")
+print("LED configured values (software config):")
+for key in [
+    "mode", "red_value", "green_value", "blue_value",
+    "task_name", "is_run_on_startup"
+]:
+    if key in led:
+        print(f"- {key}: {led[key]}")
+PY
+    ;;
+
+  read|status)
     set -- $(parse_common_flags "$@")
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     run_python "$code_dir" <<PY
@@ -121,8 +150,17 @@ exp = Expansion()
 try:
     mode = exp.get_led_mode()
     colors = exp.get_all_led_color()
-    print(f"LED mode: {mode}")
+    mode_name = {
+        0: "off",
+        1: "manual",
+        2: "follow",
+        3: "breathing",
+        4: "rainbow",
+    }.get(mode, "unknown")
+    grouped = [tuple(colors[i:i+3]) for i in range(0, len(colors), 3)]
+    print(f"LED mode (hardware): {mode} ({mode_name})")
     print(f"All LED colors raw (18 bytes): {colors}")
+    print(f"LED colors grouped (6 LEDs): {grouped}")
 finally:
     exp.end()
 PY

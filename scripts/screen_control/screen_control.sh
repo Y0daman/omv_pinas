@@ -13,6 +13,9 @@ Usage:
   screen_control.sh <command> [options]
 
 Commands:
+  get
+  read
+  status
   info
   run-dashboard
   run-monitor
@@ -92,6 +95,49 @@ resolve_qpa_platform() {
 qpa_platform="$(resolve_qpa_platform "$backend")"
 
 case "$cmd" in
+  get)
+    cfg_file="$(resolve_freenove_config_file "$code_dir")"
+    python3 - <<PY
+import json
+from pathlib import Path
+
+cfg = Path("${cfg_file}")
+if not cfg.exists():
+    print(f"Missing config file: {cfg}")
+    raise SystemExit(1)
+
+data = json.loads(cfg.read_text(encoding="utf-8"))
+monitor = data.get("Monitor", {})
+print(f"Config file: {cfg}")
+print("Screen configured values (software config):")
+for key in ["screen_orientation", "follow_led_color"]:
+    if key in monitor:
+        print(f"- {key}: {monitor[key]}")
+PY
+    ;;
+
+  read|status)
+    echo "Screen runtime read:"
+    echo "- Freenove Code dir: $code_dir"
+    echo "- DISPLAY: ${DISPLAY:-<unset>}"
+    echo "- WAYLAND_DISPLAY: ${WAYLAND_DISPLAY:-<unset>}"
+    echo "- XDG_RUNTIME_DIR: ${XDG_RUNTIME_DIR:-<unset>}"
+    echo "- Suggested QT_QPA_PLATFORM: $qpa_platform"
+    if command -v xrandr >/dev/null 2>&1; then
+      xr="$(xrandr --current 2>/dev/null || true)"
+      if [[ -n "$xr" ]]; then
+        echo "- xrandr output:"
+        printf '%s\n' "$xr"
+      fi
+    fi
+    if [[ -r /sys/class/graphics/fb0/virtual_size ]]; then
+      echo "- fb0 virtual_size: $(cat /sys/class/graphics/fb0/virtual_size)"
+    fi
+    if [[ -r /sys/class/drm/card0-HDMI-A-1/status ]]; then
+      echo "- HDMI-A-1 status: $(cat /sys/class/drm/card0-HDMI-A-1/status)"
+    fi
+    ;;
+
   info)
     echo "Freenove Code dir: $code_dir"
     echo "DISPLAY: ${DISPLAY:-<unset>}"

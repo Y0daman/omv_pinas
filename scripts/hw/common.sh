@@ -34,3 +34,8 @@ python_run_with_code_dir() {
   shift
   PYTHONPATH="$code_dir${PYTHONPATH:+:$PYTHONPATH}" python3 "$@"
 }
+
+resolve_freenove_config_file() {
+  local code_dir="$1"
+  printf '%s\n' "$code_dir/app_config.json"
+}

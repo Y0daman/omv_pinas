@@ -9,6 +9,8 @@ This project includes wrappers for the Freenove FNK0107 control code.
 - `scripts/oled_control/oled_control.sh`
 - `scripts/screen_control/screen_control.sh`
 - `scripts/hw/common.sh` (shared resolver helpers)
+- `scripts/hw/read_temp.sh`
+- `scripts/hw/read_all_status.sh`
 
 Set `FREENOVE_CODE_DIR` if your Freenove `Code/` path is non-standard.
 
@@ -39,7 +41,12 @@ Additional fan modes:
 # Follow Raspberry Pi PWM duty
 ./scripts/fan_control/set_fan_percent.sh follow-rpi --min-speed 20 --max-speed 100
 
+# Maintain a desired temperature (active control loop)
+./scripts/fan_control/set_fan_percent.sh target-temp 55 --sensor cpu --min-speed 20 --max-speed 100 --gain 4 --interval 2
+
 # Show current fan configuration
+./scripts/fan_control/set_fan_percent.sh get
+./scripts/fan_control/set_fan_percent.sh read
 ./scripts/fan_control/set_fan_percent.sh status
 ```
 
@@ -53,6 +60,8 @@ Examples:
 ./scripts/led_control/led_control.sh preset blue
 ./scripts/led_control/led_control.sh preset orange
 ./scripts/led_control/led_control.sh list-presets
+./scripts/led_control/led_control.sh get
+./scripts/led_control/led_control.sh read
 ./scripts/led_control/led_control.sh breathing 0 180 255
 ./scripts/led_control/led_control.sh manual 255 80 0
 ./scripts/led_control/led_control.sh off
@@ -102,6 +111,8 @@ List and inspect current OLED setup:
 
 ```bash
 ./scripts/oled_control/oled_control.sh list
+./scripts/oled_control/oled_control.sh get
+./scripts/oled_control/oled_control.sh read
 ./scripts/oled_control/oled_control.sh status
 ```
 
@@ -117,6 +128,8 @@ Check what is possible on your host:
 
 ```bash
 ./scripts/screen_control/screen_control.sh info
+./scripts/screen_control/screen_control.sh get
+./scripts/screen_control/screen_control.sh read
 ```
 
 Launch dashboard:
@@ -129,4 +142,17 @@ Launch monitor-only UI:
 
 ```bash
 ./scripts/screen_control/screen_control.sh run-monitor --backend auto
+```
+
+## Hardware status and temperatures
+
+```bash
+# Read temperature sensors
+./scripts/hw/read_temp.sh
+./scripts/hw/read_temp.sh --sensor cpu
+./scripts/hw/read_temp.sh --sensor case
+./scripts/hw/read_temp.sh --sensor nvme
+
+# Full hardware and config snapshot
+./scripts/hw/read_all_status.sh
 ```

@@ -14,6 +14,8 @@ Usage:
 
 Commands:
   list
+  get
+  read
   status
   show <time|usage|temp|fan|all>
   enable <comma-separated-pages>
@@ -109,7 +111,7 @@ Available OLED pages from Freenove task_oled.py:
 EOF
     ;;
 
-  status)
+  get|status)
     set -- $(parse_flags "$@")
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     python_run_with_code_dir "$code_dir" - <<PY
@@ -131,10 +133,51 @@ screens = {
 }
 
 print(f"Config file: {cfg}")
+print(f"OLED task configured on startup: {oled.get('is_run_on_startup', False)}")
 for key, payload in screens.items():
     enabled = payload.get("is_run_on_oled", False)
     duration = payload.get("display_time", "n/a")
     print(f"- {key}: enabled={enabled}, display_time={duration}s")
+PY
+    ;;
+
+  read)
+    set -- $(parse_flags "$@")
+    code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
+    python_run_with_code_dir "$code_dir" - <<'PY'
+import os
+import subprocess
+from pathlib import Path
+
+code_dir = Path("." ).resolve()
+log_path = Path("/tmp/task_oled.log")
+
+def run(cmd):
+    try:
+        return subprocess.check_output(cmd, text=True, stderr=subprocess.DEVNULL).strip()
+    except Exception:
+        return ""
+
+pids = run(["pgrep", "-af", "task_oled.py"])
+print("OLED runtime read:")
+if pids:
+    print("- task_oled.py process:")
+    for line in pids.splitlines():
+        print(f"  {line}")
+else:
+    print("- task_oled.py process: not running")
+
+if log_path.exists():
+    print(f"- log file: {log_path} ({log_path.stat().st_size} bytes)")
+else:
+    print(f"- log file: {log_path} (missing)")
+
+if Path("/dev/i2c-1").exists():
+    print("- i2c bus: /dev/i2c-1 present")
+else:
+    print("- i2c bus: /dev/i2c-1 missing")
+
+print("- note: OLED pixel readback is not exposed by the board API")
 PY
     ;;
 

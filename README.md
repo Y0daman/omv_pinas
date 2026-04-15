@@ -67,6 +67,13 @@ Fan control modes:
 
 # Follow Raspberry Pi PWM
 ./scripts/fan_control/set_fan_percent.sh follow-rpi --min-speed 20 --max-speed 100
+
+# Keep target temperature (active loop)
+./scripts/fan_control/set_fan_percent.sh target-temp 55 --sensor cpu --min-speed 20 --max-speed 100 --gain 4 --interval 2
+
+# Config vs hardware readback
+./scripts/fan_control/set_fan_percent.sh get
+./scripts/fan_control/set_fan_percent.sh read
 ```
 
 LED modes include presets and temperature-follow:
@@ -77,6 +84,10 @@ LED modes include presets and temperature-follow:
 ./scripts/led_control/led_control.sh preset orange
 ./scripts/led_control/led_control.sh list-presets
 
+# Config vs hardware readback
+./scripts/led_control/led_control.sh get
+./scripts/led_control/led_control.sh read
+
 # Dynamic temperature color (blue -> red)
 ./scripts/led_control/led_control.sh temp-follow --sensor cpu --cold 35 --hot 75 --interval 1
 ```
@@ -85,6 +96,8 @@ OLED page control:
 
 ```bash
 ./scripts/oled_control/oled_control.sh list
+./scripts/oled_control/oled_control.sh get
+./scripts/oled_control/oled_control.sh read
 ./scripts/oled_control/oled_control.sh show usage --restart-task
 ```
 
@@ -92,7 +105,16 @@ Large screen dashboard:
 
 ```bash
 ./scripts/screen_control/screen_control.sh info
+./scripts/screen_control/screen_control.sh get
+./scripts/screen_control/screen_control.sh read
 ./scripts/screen_control/screen_control.sh run-dashboard --backend auto
+```
+
+Hardware status scripts:
+
+```bash
+./scripts/hw/read_temp.sh
+./scripts/hw/read_all_status.sh
 ```
 
 ## Important notes

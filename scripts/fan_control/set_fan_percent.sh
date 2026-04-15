@@ -14,8 +14,12 @@ Usage:
   set_fan_percent.sh follow-case [--low-temp C] [--high-temp C] [--schmitt C] \
                      [--low-speed P] [--mid-speed P] [--high-speed P] [--persist] [--code-dir <path>]
   set_fan_percent.sh follow-rpi [--min-speed P] [--max-speed P] [--persist] [--code-dir <path>]
+  set_fan_percent.sh target-temp <C> [--sensor cpu|case] [--min-speed P] [--max-speed P] \
+                     [--gain P_PER_C] [--interval S] [--duration S] [--persist] [--code-dir <path>]
   set_fan_percent.sh off [--persist] [--code-dir <path>]
-  set_fan_percent.sh status [--code-dir <path>]
+  set_fan_percent.sh get [--code-dir <path>]
+  set_fan_percent.sh read [--code-dir <path>]
+  set_fan_percent.sh status [--code-dir <path>]   # alias for read
 
 Backward-compatible shortcut:
   set_fan_percent.sh <percent>   # same as: manual <percent>
@@ -24,6 +28,7 @@ Mode details:
   manual      Fixed duty on all fan channels (FAN1&2, FAN3&4, FAN5 if present)
   follow-case Controller auto mode based on case temperature sensor
   follow-rpi  Controller follows Raspberry Pi PWM duty
+  target-temp Active control loop to maintain desired temperature
 
 Ranges:
   percent/speed: 0..100
@@ -88,6 +93,36 @@ case "$cmd" in
   -h|--help)
     usage
     exit 0
+    ;;
+
+  get)
+    set -- $(read_common_flags "$@")
+    code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
+    cfg_file="$(resolve_freenove_config_file "$code_dir")"
+
+    python3 - <<PY
+import json
+from pathlib import Path
+
+cfg = Path("${cfg_file}")
+if not cfg.exists():
+    print(f"Missing config file: {cfg}")
+    raise SystemExit(1)
+
+data = json.loads(cfg.read_text(encoding="utf-8"))
+fan = data.get("Fan", {})
+print(f"Config file: {cfg}")
+print("Fan configured values (software config):")
+for key in [
+    "mode", "mode1_fan_group1", "mode1_fan_group2", "mode1_fan_group3",
+    "mode2_low_temp_threshold", "mode2_high_temp_threshold", "mode2_temp_schmitt",
+    "mode2_low_speed", "mode2_middle_speed", "mode2_high_speed",
+    "mode3_min_speed_mapping", "mode3_max_speed_mapping",
+    "task_name", "is_run_on_startup"
+]:
+    if key in fan:
+        print(f"- {key}: {fan[key]}")
+PY
     ;;
 
   manual)
@@ -258,6 +293,108 @@ finally:
 PY
     ;;
 
+  target-temp)
+    if [[ $# -lt 1 ]]; then
+      echo "target-temp mode requires target temperature in C" >&2
+      exit 1
+    fi
+    target_temp="$1"
+    shift
+
+    sensor="cpu"
+    min_speed_p=20
+    max_speed_p=100
+    gain=4
+    interval="2.0"
+    duration="0"
+
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --sensor) sensor="${2:-}"; shift 2 ;;
+        --min-speed) min_speed_p="${2:-}"; shift 2 ;;
+        --max-speed) max_speed_p="${2:-}"; shift 2 ;;
+        --gain) gain="${2:-}"; shift 2 ;;
+        --interval) interval="${2:-}"; shift 2 ;;
+        --duration) duration="${2:-}"; shift 2 ;;
+        --persist|--code-dir)
+          set -- $(read_common_flags "$@")
+          break
+          ;;
+        *)
+          echo "Unknown argument for target-temp: $1" >&2
+          exit 1
+          ;;
+      esac
+    done
+
+    if [[ "$sensor" != "cpu" && "$sensor" != "case" ]]; then
+      echo "--sensor must be cpu or case" >&2
+      exit 1
+    fi
+    require_int_in_range "min-speed" "$min_speed_p" 0 100
+    require_int_in_range "max-speed" "$max_speed_p" 0 100
+    if (( min_speed_p > max_speed_p )); then
+      echo "min-speed cannot be greater than max-speed." >&2
+      exit 1
+    fi
+
+    code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
+
+    python_run_with_code_dir "$code_dir" - <<PY
+import time
+from api_expansion import Expansion
+from api_systemInfo import SystemInformation
+
+target_temp = float("${target_temp}")
+sensor = "${sensor}"
+min_speed_p = float(${min_speed_p})
+max_speed_p = float(${max_speed_p})
+gain = float(${gain})
+interval = float(${interval})
+duration = float(${duration})
+persist = ${persist}
+
+if max_speed_p < min_speed_p:
+    raise SystemExit("max-speed must be >= min-speed")
+
+def clamp(v, lo, hi):
+    return max(lo, min(hi, v))
+
+def pct_to_duty(pct):
+    return int(round(clamp(pct, 0.0, 100.0) * 255.0 / 100.0))
+
+exp = Expansion()
+sysinfo = SystemInformation()
+
+try:
+    exp.set_fan_power_switch(1)
+    exp.set_fan_mode(1)
+    exp.set_fan_frequency(50000)
+    if persist:
+      exp.set_save_flash(1)
+
+    start = time.time()
+    while True:
+        if sensor == "cpu":
+            temp = float(sysinfo.get_raspberry_pi_cpu_temperature())
+        else:
+            temp = float(exp.get_temp())
+
+        error = temp - target_temp
+        speed_pct = clamp(min_speed_p + gain * error, min_speed_p, max_speed_p)
+        duty = pct_to_duty(speed_pct)
+        exp.set_fan_duty(duty, duty, duty)
+
+        print(f"sensor={sensor} temp={temp:.2f}C target={target_temp:.2f}C speed={speed_pct:.1f}% duty={duty}/255")
+
+        if duration > 0 and (time.time() - start) >= duration:
+            break
+        time.sleep(interval)
+finally:
+    exp.end()
+PY
+    ;;
+
   off)
     set -- $(read_common_flags "$@")
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
@@ -280,7 +417,7 @@ finally:
 PY
     ;;
 
-  status)
+  read|status)
     set -- $(read_common_flags "$@")
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
 
