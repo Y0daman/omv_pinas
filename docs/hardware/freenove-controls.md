@@ -98,14 +98,17 @@ Available pages:
 Show only one page (for example usage):
 
 ```bash
-./scripts/oled_control/oled_control.sh show usage --restart-task
+./scripts/oled_control/oled_control.sh show usage
 ```
 
 Show all pages again:
 
 ```bash
-./scripts/oled_control/oled_control.sh show all --restart-task
+./scripts/oled_control/oled_control.sh show all
 ```
+
+By default, OLED config changes automatically restart `task_oled.py` so changes are visible immediately.
+Use `--no-restart-task` if you explicitly want to skip restart.
 
 List and inspect current OLED setup:
 

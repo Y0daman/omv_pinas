@@ -26,7 +26,8 @@ Commands:
 
 Options:
   --code-dir <path>      Path to Freenove Code directory
-  --restart-task         Restart task_oled.py after config changes
+  --restart-task         Restart task_oled.py after config changes (default: on)
+  --no-restart-task      Do not restart task_oled.py after config changes
 
 Pages:
   time   = Screen 1 (date/time/weekday)
@@ -45,7 +46,7 @@ cmd="$1"
 shift
 
 code_dir_override=""
-restart_task=0
+restart_task=1
 REMAINING_ARGS=()
 
 parse_flags() {
@@ -57,6 +58,10 @@ parse_flags() {
         ;;
       --restart-task)
         restart_task=1
+        shift
+        ;;
+      --no-restart-task)
+        restart_task=0
         shift
         ;;
       *)
@@ -244,8 +249,6 @@ PY
 
     if (( restart_task == 1 )); then
       restart_oled_task "$code_dir"
-    else
-      echo "Tip: add --restart-task to apply immediately."
     fi
     ;;
 

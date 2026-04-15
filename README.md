@@ -98,7 +98,7 @@ OLED page control:
 ./scripts/oled_control/oled_control.sh list
 ./scripts/oled_control/oled_control.sh get
 ./scripts/oled_control/oled_control.sh read
-./scripts/oled_control/oled_control.sh show usage --restart-task
+./scripts/oled_control/oled_control.sh show usage
 ```
 
 Large screen dashboard:
