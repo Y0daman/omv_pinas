@@ -1,0 +1,13 @@
+.DS_Store
+._*
+*.log
+*.tmp
+.env
+
+# Runtime/data folders
+data/
+backups/
+
+# Editor
+.idea/
+.vscode/
