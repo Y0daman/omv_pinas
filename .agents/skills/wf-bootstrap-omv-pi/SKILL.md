@@ -9,9 +9,11 @@ description: Execute the end-to-end bootstrap workflow for a new Raspberry Pi OM
 
 1. Run hardware preflight with `hw-fnk0107-quad-nvme`.
 2. Run `scripts/00-preflight.sh`.
-3. Run `scripts/10-install-omv.sh`.
-4. Run `scripts/20-install-omv-extras.sh`.
-5. Apply baseline configuration with `omv-core`.
+3. Run `scripts/05-preinstall-flash.sh`.
+4. Reboot.
+5. Run `scripts/10-install-omv.sh`.
+6. Run `scripts/20-install-omv-extras.sh`.
+7. Apply baseline configuration with `omv-core`.
 
 ## Decision points
 

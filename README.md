@@ -4,7 +4,7 @@ This repo contains reusable scripts, app definitions, and Agent Skills for build
 
 ## Target setup
 
-- Base OS: Raspberry Pi OS Lite 64-bit (Bookworm) or Debian 12
+- Base OS: Debian 13 (Trixie) / Raspberry Pi OS based on Debian 13
 - NAS layer: OpenMediaVault
 - Add-ons: OMV-Extras (Compose, additional plugins)
 - Apps: Docker Compose files in `apps/`
@@ -19,9 +19,18 @@ cd omv_pinas
 chmod +x scripts/*.sh
 
 ./scripts/00-preflight.sh
+./scripts/01-hw-preflight.sh
+./scripts/05-preinstall-flash.sh
+sudo reboot
 ./scripts/10-install-omv.sh
 ./scripts/20-install-omv-extras.sh
 ```
+
+Notes:
+
+- `scripts/10-install-omv.sh` uses the official installer (`https://get.openmediavault.io`).
+- `scripts/05-preinstall-flash.sh` applies SD-write reduction defaults.
+- `scripts/20-install-omv-extras.sh` attempts to install `openmediavault-writecache`.
 
 After installation:
 

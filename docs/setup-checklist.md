@@ -14,10 +14,15 @@ Run in this order:
 ```bash
 ./scripts/00-preflight.sh
 ./scripts/01-hw-preflight.sh
+./scripts/05-preinstall-flash.sh
 sudo reboot
 ./scripts/10-install-omv.sh
 ./scripts/20-install-omv-extras.sh
 ```
+
+- OMV install script uses the official endpoint: `https://get.openmediavault.io`
+- Flash write-reduction defaults are applied by `scripts/05-preinstall-flash.sh`
+- `scripts/20-install-omv-extras.sh` tries to install `openmediavault-writecache`
 
 ## 3) OMV web UI
 

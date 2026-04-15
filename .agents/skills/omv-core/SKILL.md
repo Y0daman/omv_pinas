@@ -8,10 +8,13 @@ description: Install and baseline OpenMediaVault on Raspberry Pi 5. Use when set
 ## Procedure
 
 1. Run `scripts/00-preflight.sh`.
-2. Run `scripts/10-install-omv.sh`.
-3. Run `scripts/20-install-omv-extras.sh`.
-4. In OMV GUI, configure admin password, time/NTP, storage, shares, and SMB/NFS.
-5. Enable SMART, scrub/self-tests, and notifications.
+2. Run `scripts/01-hw-preflight.sh`.
+3. Run `scripts/05-preinstall-flash.sh`.
+4. Reboot.
+5. Run `scripts/10-install-omv.sh` (official `get.openmediavault.io` installer).
+6. Run `scripts/20-install-omv-extras.sh`.
+7. In OMV GUI, configure admin password, time/NTP, storage, shares, and SMB/NFS.
+8. Enable SMART, scrub/self-tests, and notifications.
 
 ## Validation
 

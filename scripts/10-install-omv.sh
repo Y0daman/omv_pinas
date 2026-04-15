@@ -2,14 +2,14 @@
 set -euo pipefail
 
 if [[ "${EUID}" -eq 0 ]]; then
-  echo "Kör inte scriptet som root."
+  echo "Do not run as root."
   exit 1
 fi
 
-echo "Installerar OpenMediaVault (officiellt installscript)..."
-echo "Detta kan ta en stund."
+echo "Installing OpenMediaVault using the official installer..."
+echo "This can take a while."
 
-curl -fsSL https://github.com/OpenMediaVault-Plugin-Developers/installScript/raw/master/install | sudo bash
+wget -O - https://get.openmediavault.io | sudo bash
 
-echo "OMV-installation klar."
-echo "Öppna: http://$(hostname -I | awk '{print $1}')/"
+echo "OMV installation complete."
+echo "Open: http://$(hostname -I | awk '{print $1}')/"
