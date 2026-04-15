@@ -422,9 +422,22 @@ PY
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
 
     python_run_with_code_dir "$code_dir" - <<'PY'
+import glob
 from api_expansion import Expansion
+from api_systemInfo import SystemInformation
+
+def read_pi_fan_rpm():
+    candidates = sorted(glob.glob('/sys/devices/platform/cooling_fan/hwmon/hwmon*/fan1_input'))
+    for path in candidates:
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                return int(f.read().strip())
+        except Exception:
+            continue
+    return None
 
 exp = Expansion()
+sysi = SystemInformation()
 try:
     print(f"Fan power switch: {exp.get_fan_power_switch()}")
     print(f"Fan mode: {exp.get_fan_mode()} (0=off,1=manual,2=follow-case,3=follow-rpi)")
@@ -435,6 +448,13 @@ try:
     print(f"Fan RPi mapping [min,max]: {exp.get_fan_pi_following()}")
     print(f"Case temperature: {exp.get_temp()}C")
     print(f"Motor speed readback: {exp.get_motor_speed()}")
+    pi_pwm = sysi.get_raspberry_pi_fan_duty()
+    print(f"Pi fan PWM: {pi_pwm} (0..255)")
+    pi_rpm = read_pi_fan_rpm()
+    if pi_rpm is None:
+        print("Pi fan RPM: unavailable")
+    else:
+        print(f"Pi fan RPM: {pi_rpm}")
 finally:
     exp.end()
 PY
