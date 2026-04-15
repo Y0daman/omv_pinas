@@ -53,6 +53,7 @@ fi
 
 persist=0
 code_dir_override=""
+REMAINING_ARGS=()
 
 require_int_in_range() {
   local name="$1"
@@ -86,7 +87,7 @@ read_common_flags() {
         ;;
     esac
   done
-  printf '%s\n' "$@"
+  REMAINING_ARGS=("$@")
 }
 
 case "$cmd" in
@@ -96,7 +97,8 @@ case "$cmd" in
     ;;
 
   get)
-    set -- $(read_common_flags "$@")
+    read_common_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     ensure_freenove_config_exists "$code_dir"
     cfg_file="$(resolve_freenove_config_file "$code_dir")"
@@ -134,7 +136,8 @@ PY
     percent="$1"
     shift
     require_int_in_range "percent" "$percent" 0 100
-    set -- $(read_common_flags "$@")
+    read_common_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
 
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     duty="$(percent_to_duty "$percent")"
@@ -181,7 +184,8 @@ PY
         --mid-speed) mid_speed_p="${2:-}"; shift 2 ;;
         --high-speed) high_speed_p="${2:-}"; shift 2 ;;
         --persist|--code-dir)
-          set -- $(read_common_flags "$@")
+          read_common_flags "$@"
+          set -- "${REMAINING_ARGS[@]}"
           break
           ;;
         *)
@@ -248,7 +252,8 @@ PY
         --min-speed) min_speed_p="${2:-}"; shift 2 ;;
         --max-speed) max_speed_p="${2:-}"; shift 2 ;;
         --persist|--code-dir)
-          set -- $(read_common_flags "$@")
+          read_common_flags "$@"
+          set -- "${REMAINING_ARGS[@]}"
           break
           ;;
         *)
@@ -318,7 +323,8 @@ PY
         --interval) interval="${2:-}"; shift 2 ;;
         --duration) duration="${2:-}"; shift 2 ;;
         --persist|--code-dir)
-          set -- $(read_common_flags "$@")
+          read_common_flags "$@"
+          set -- "${REMAINING_ARGS[@]}"
           break
           ;;
         *)
@@ -397,7 +403,8 @@ PY
     ;;
 
   off)
-    set -- $(read_common_flags "$@")
+    read_common_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
 
     python_run_with_code_dir "$code_dir" - <<PY
@@ -419,7 +426,8 @@ PY
     ;;
 
   read|status)
-    set -- $(read_common_flags "$@")
+    read_common_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
 
     python_run_with_code_dir "$code_dir" - <<'PY'

@@ -81,6 +81,7 @@ shift
 
 persist=0
 code_dir_override=""
+REMAINING_ARGS=()
 
 parse_common_flags() {
   while [[ $# -gt 0 ]]; do
@@ -98,7 +99,7 @@ parse_common_flags() {
         ;;
     esac
   done
-  printf '%s\n' "$@"
+  REMAINING_ARGS=("$@")
 }
 
 run_python() {
@@ -114,7 +115,8 @@ case "$cmd" in
     ;;
 
   get)
-    set -- $(parse_common_flags "$@")
+    parse_common_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     ensure_freenove_config_exists "$code_dir"
     cfg_file="$(resolve_freenove_config_file "$code_dir")"
@@ -142,7 +144,8 @@ PY
     ;;
 
   read|status)
-    set -- $(parse_common_flags "$@")
+    parse_common_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     run_python "$code_dir" <<PY
 from api_expansion import Expansion
@@ -184,7 +187,8 @@ PY
       exit 1
     fi
     read -r r g b <<<"$rgb"
-    set -- $(parse_common_flags "$@")
+    parse_common_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
 
     run_python "$code_dir" <<PY
@@ -202,7 +206,8 @@ PY
     ;;
 
   off)
-    set -- $(parse_common_flags "$@")
+    parse_common_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     run_python "$code_dir" <<PY
 from api_expansion import Expansion
@@ -219,7 +224,8 @@ PY
     ;;
 
   rainbow)
-    set -- $(parse_common_flags "$@")
+    parse_common_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     run_python "$code_dir" <<PY
 from api_expansion import Expansion
@@ -235,7 +241,8 @@ PY
     ;;
 
   floating-rainbow)
-    set -- $(parse_common_flags "$@")
+    parse_common_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     run_python "$code_dir" <<PY
 from api_expansion import Expansion
@@ -263,7 +270,8 @@ PY
         exit 1
       fi
     done
-    set -- $(parse_common_flags "$@")
+    parse_common_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
 
     case "$cmd" in
@@ -293,7 +301,8 @@ PY
       exit 1
     fi
     shift || true
-    set -- $(parse_common_flags "$@")
+    parse_common_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
 
     run_python "$code_dir" <<PY
@@ -373,7 +382,8 @@ PY
           shift 2
           ;;
         --persist|--code-dir)
-          set -- $(parse_common_flags "$@")
+          parse_common_flags "$@"
+          set -- "${REMAINING_ARGS[@]}"
           break
           ;;
         *)

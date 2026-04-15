@@ -46,6 +46,7 @@ shift
 
 code_dir_override=""
 restart_task=0
+REMAINING_ARGS=()
 
 parse_flags() {
   while [[ $# -gt 0 ]]; do
@@ -63,7 +64,7 @@ parse_flags() {
         ;;
     esac
   done
-  printf '%s\n' "$@"
+  REMAINING_ARGS=("$@")
 }
 
 restart_oled_task() {
@@ -116,7 +117,8 @@ EOF
     ;;
 
   get|status)
-    set -- $(parse_flags "$@")
+    parse_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     ensure_freenove_config_exists "$code_dir"
     python_run_with_code_dir "$code_dir" - <<PY
@@ -147,7 +149,8 @@ PY
     ;;
 
   read)
-    set -- $(parse_flags "$@")
+    parse_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     python_run_with_code_dir "$code_dir" - <<'PY'
 import os
@@ -193,7 +196,8 @@ PY
     fi
     pages="$1"
     shift
-    set -- $(parse_flags "$@")
+    parse_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     ensure_freenove_config_exists "$code_dir"
     pages_csv="$(map_pages_to_python_list "$pages")"
@@ -246,21 +250,24 @@ PY
     ;;
 
   start-task)
-    set -- $(parse_flags "$@")
+    parse_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     (cd "$code_dir" && nohup python3 task_oled.py >/tmp/task_oled.log 2>&1 &)
     echo "Started task_oled.py (logs: /tmp/task_oled.log)"
     ;;
 
   stop-task)
-    set -- $(parse_flags "$@")
+    parse_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     (cd "$code_dir" && pkill -f "task_oled.py" >/dev/null 2>&1 || true)
     echo "Stopped task_oled.py"
     ;;
 
   restart-task)
-    set -- $(parse_flags "$@")
+    parse_flags "$@"
+    set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
     restart_oled_task "$code_dir"
     ;;
