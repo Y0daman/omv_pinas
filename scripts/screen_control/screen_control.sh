@@ -96,6 +96,7 @@ qpa_platform="$(resolve_qpa_platform "$backend")"
 
 case "$cmd" in
   get)
+    ensure_freenove_config_exists "$code_dir"
     cfg_file="$(resolve_freenove_config_file "$code_dir")"
     python3 - <<PY
 import json

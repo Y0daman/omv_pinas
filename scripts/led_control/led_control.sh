@@ -116,6 +116,7 @@ case "$cmd" in
   get)
     set -- $(parse_common_flags "$@")
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
+    ensure_freenove_config_exists "$code_dir"
     cfg_file="$(resolve_freenove_config_file "$code_dir")"
 
     python3 - <<PY

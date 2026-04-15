@@ -39,3 +39,23 @@ resolve_freenove_config_file() {
   local code_dir="$1"
   printf '%s\n' "$code_dir/app_config.json"
 }
+
+ensure_freenove_config_exists() {
+  local code_dir="$1"
+  local cfg
+  cfg="$(resolve_freenove_config_file "$code_dir")"
+
+  if [[ -f "$cfg" ]]; then
+    return 0
+  fi
+
+  echo "Config file missing, creating defaults: $cfg" >&2
+  python_run_with_code_dir "$code_dir" - <<PY
+from api_json import ConfigManager
+
+cfg = "${cfg}"
+cm = ConfigManager(cfg)
+cm.save_config()
+print(f"Created config: {cfg}")
+PY
+}

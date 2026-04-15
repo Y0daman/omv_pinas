@@ -118,6 +118,7 @@ EOF
   get|status)
     set -- $(parse_flags "$@")
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
+    ensure_freenove_config_exists "$code_dir"
     python_run_with_code_dir "$code_dir" - <<PY
 import json
 from pathlib import Path
@@ -194,6 +195,7 @@ PY
     shift
     set -- $(parse_flags "$@")
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
+    ensure_freenove_config_exists "$code_dir"
     pages_csv="$(map_pages_to_python_list "$pages")"
 
     python_run_with_code_dir "$code_dir" - <<PY
