@@ -4,17 +4,34 @@ set -euo pipefail
 resolve_freenove_code_dir() {
   local requested="${1:-${FREENOVE_CODE_DIR:-}}"
   local -a candidates=()
+  local home_dir="${HOME:-}"
+  local user_name="${USER:-}"
 
   if [[ -n "$requested" ]]; then
     candidates+=("$requested")
   fi
 
-  candidates+=(
-    "/Volumes/CEVAULT512/git/Freenove_Computer_Case_Kit_Pro_for_Raspberry_Pi/Code"
-    "$HOME/git/Freenove_Computer_Case_Kit_Pro_for_Raspberry_Pi/Code"
-    "/opt/Freenove_Computer_Case_Kit_Pro_for_Raspberry_Pi/Code"
-    "/home/$USER/Freenove_Computer_Case_Kit_Pro_for_Raspberry_Pi/Code"
-  )
+  candidates+=("/home/jimmy/git/omv_pinas/scripts/freenove")
+
+  if [[ -n "$home_dir" ]]; then
+    candidates+=("$home_dir/git/omv_pinas/scripts/freenove")
+  fi
+
+  candidates+=("/opt/omv_pinas/scripts/freenove")
+
+  if [[ -n "$user_name" ]]; then
+    candidates+=("/home/$user_name/git/omv_pinas/scripts/freenove")
+  fi
+
+  # Legacy fallback paths
+  candidates+=("/Volumes/CEVAULT512/git/Freenove_Computer_Case_Kit_Pro_for_Raspberry_Pi/Code")
+  if [[ -n "$home_dir" ]]; then
+    candidates+=("$home_dir/git/Freenove_Computer_Case_Kit_Pro_for_Raspberry_Pi/Code")
+  fi
+  candidates+=("/opt/Freenove_Computer_Case_Kit_Pro_for_Raspberry_Pi/Code")
+  if [[ -n "$user_name" ]]; then
+    candidates+=("/home/$user_name/Freenove_Computer_Case_Kit_Pro_for_Raspberry_Pi/Code")
+  fi
 
   local dir
   for dir in "${candidates[@]}"; do
