@@ -17,7 +17,7 @@ Set `FREENOVE_CODE_DIR` if your Freenove `Code/` path is non-standard.
 Example:
 
 ```bash
-export FREENOVE_CODE_DIR="/path/to/Freenove_Computer_Case_Kit_Pro_for_Raspberry_Pi/Code"
+export FREENOVE_CODE_DIR="/home/jimmy/git/omv_pinas/scripts/freenove"
 ```
 
 ## Fans
