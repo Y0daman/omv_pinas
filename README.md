@@ -111,6 +111,12 @@ Large screen dashboard:
 ./scripts/screen_control/screen_control.sh get
 ./scripts/screen_control/screen_control.sh read
 ./scripts/screen_control/screen_control.sh run-dashboard --backend auto
+
+# Portrait mounted panel
+./scripts/screen_control/screen_control.sh run-dashboard --backend eglfs --rotation 90
+
+# Virtual preview over VNC (requires xvfb + x11vnc)
+./scripts/screen_control/screen_control.sh run-dashboard-virtual --virtual-size auto --vnc-port 5901
 ```
 
 Hardware status scripts:

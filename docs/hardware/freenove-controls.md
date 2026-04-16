@@ -139,6 +139,9 @@ Launch dashboard:
 
 ```bash
 ./scripts/screen_control/screen_control.sh run-dashboard --backend auto
+
+# Force portrait rotation if panel is mounted vertically
+./scripts/screen_control/screen_control.sh run-dashboard --backend eglfs --rotation 90
 ```
 
 Launch monitor-only UI:
@@ -146,6 +149,20 @@ Launch monitor-only UI:
 ```bash
 ./scripts/screen_control/screen_control.sh run-monitor --backend auto
 ```
+
+Virtual preview (VNC) for remote viewing/debugging:
+
+```bash
+# Requires: sudo apt-get install -y xvfb x11vnc
+./scripts/screen_control/screen_control.sh run-dashboard-virtual --virtual-size auto --vnc-port 5901
+./scripts/screen_control/screen_control.sh run-monitor-virtual --virtual-size auto --vnc-port 5901
+```
+
+Notes:
+
+- `run-monitor` is a sample/demo monitor app from Freenove code (static demo values).
+- `run-dashboard` is the full interactive app.
+- `run-dashboard` now enables EGLFS cursor-safe defaults and will auto-fallback to `linuxfb` if EGLFS segfaults.
 
 ## Hardware status and temperatures
 
