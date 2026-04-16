@@ -1,8 +1,9 @@
 # app_ui_monitor.py
+import os
 import sys
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QApplication, QLabel
 from PyQt5.QtCore import Qt, QRectF, pyqtSignal
-from PyQt5.QtGui import QPainter, QPen, QColor, QFont, QBrush
+from PyQt5.QtGui import QPainter, QPen, QColor, QFont, QBrush, QPixmap
 
 class CircleProgressWidget(QWidget):
     """Circular progress bar control class implemented using PyQt"""
@@ -181,9 +182,28 @@ class MonitoringTab(QWidget):
         self.grid_layout.setRowStretch(1, 1)         # Equal row heights
         self.grid_layout.setContentsMargins(0, 0, 0, 5)
 
-        self.network_status_label = QLabel("<span style='color:#9be7a6'>&#9679;</span> Checking...")
-        self.network_status_label.setAlignment(Qt.AlignCenter)
-        self.network_status_label.setStyleSheet("color: #f0f0f0; font-size: 14px; font-weight: bold; padding: 2px;")
+        self.icon_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "picture", "icons")
+        self.network_status_icon = QLabel()
+        self.network_status_icon.setFixedSize(18, 18)
+        self.network_status_icon.setAlignment(Qt.AlignCenter)
+        self.network_status_text = QLabel("Checking...")
+        self.network_status_text.setAlignment(Qt.AlignVCenter)
+        self.network_status_text.setStyleSheet("color: #f0f0f0; font-size: 14px; font-weight: bold; padding: 2px;")
+
+        self.network_status_label = QWidget()
+        self.network_status_layout = QVBoxLayout(self.network_status_label)
+        self.network_status_layout.setContentsMargins(0, 0, 0, 0)
+        self.network_status_layout.setSpacing(0)
+
+        self.network_status_row = QGridLayout()
+        self.network_status_row.setContentsMargins(0, 0, 0, 0)
+        self.network_status_row.setHorizontalSpacing(6)
+        self.network_status_row.addWidget(self.network_status_icon, 0, 0, alignment=Qt.AlignRight)
+        self.network_status_row.addWidget(self.network_status_text, 0, 1, alignment=Qt.AlignLeft)
+
+        self.network_status_layout.addLayout(self.network_status_row)
+
+        self._set_network_icon("wifi", "green")
 
         self.vbox_layout = QVBoxLayout()
         self.vbox_layout.addWidget(self.network_status_label)
@@ -206,9 +226,52 @@ class MonitoringTab(QWidget):
         for i in range(len(self.color_combinations)):
             self.setCircleProgressColor(i, self.color_combinations[i])
 
-    def setNetworkStatus(self, text, color="#9be7a6"):
-        self.network_status_label.setText(f"<span style='color:{color}'>&#9679;</span> {text}")
-        self.network_status_label.setStyleSheet("color: #f0f0f0; font-size: 14px; font-weight: bold; padding: 2px;")
+    def _set_network_icon(self, kind, tone):
+        candidates = []
+        if kind == "wifi":
+            if tone == "yellow":
+                candidates = ["wifi_yellow.png", "wlan_yellow.png", "wifi.png"]
+            else:
+                candidates = ["wifi_green.png", "wlan_green.png", "wifi.png"]
+        elif kind == "lan":
+            if tone == "green":
+                candidates = ["lan_green.png", "ethernet_green.png", "lan.png", "ethernet.png"]
+            else:
+                candidates = ["lan_yellow.png", "ethernet_yellow.png", "lan.png", "ethernet.png"]
+
+        for name in candidates:
+            path = os.path.join(self.icon_dir, name)
+            if os.path.exists(path):
+                pix = QPixmap(path)
+                if not pix.isNull():
+                    self.network_status_icon.setPixmap(pix.scaled(16, 16, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                    self.network_status_icon.setText("")
+                    return
+
+        # Fallback if icon files are not present yet.
+        dot_color = "#9be7a6" if tone == "green" else "#f1c84c"
+        self.network_status_icon.setPixmap(QPixmap())
+        self.network_status_icon.setText("●")
+        self.network_status_icon.setStyleSheet(f"color: {dot_color}; font-size: 14px; font-weight: bold;")
+
+    def setNetworkStatus(self, kind, text, color="#9be7a6"):
+        tone = "green"
+        if kind == "lan":
+            tone = "yellow"
+        if kind in ["limited", "offline"]:
+            tone = "yellow"
+
+        if kind == "wifi":
+            self._set_network_icon("wifi", tone)
+        elif kind == "lan":
+            self._set_network_icon("lan", tone)
+        else:
+            self.network_status_icon.setPixmap(QPixmap())
+            self.network_status_icon.setText("●")
+            self.network_status_icon.setStyleSheet(f"color: {color}; font-size: 14px; font-weight: bold;")
+
+        self.network_status_text.setText(text)
+        self.network_status_text.setStyleSheet("color: #f0f0f0; font-size: 14px; font-weight: bold; padding: 2px;")
 
     def resetUiSize(self, width, height):
         self.window_width = width

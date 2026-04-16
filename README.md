@@ -104,6 +104,12 @@ OLED page control:
 ./scripts/oled_control/oled_control.sh show usage
 ```
 
+Button-driven display power control (GPIO, short/long press):
+
+```bash
+./scripts/screen_control/install-button-screen-service.sh
+```
+
 Large screen dashboard:
 
 ```bash

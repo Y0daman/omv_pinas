@@ -8,6 +8,8 @@ This project includes wrappers for the Freenove FNK0107 control code.
 - `scripts/led_control/led_control.sh`
 - `scripts/oled_control/oled_control.sh`
 - `scripts/screen_control/screen_control.sh`
+- `scripts/screen_control/button_screen_control.py`
+- `scripts/screen_control/install-button-screen-service.sh`
 - `scripts/hw/common.sh` (shared resolver helpers)
 - `scripts/hw/read_temp.sh`
 - `scripts/hw/read_all_status.sh`
@@ -148,6 +150,31 @@ Launch monitor-only UI:
 
 ```bash
 ./scripts/screen_control/screen_control.sh run-monitor --backend auto
+```
+
+## Button-controlled screen power (GPIO)
+
+Use a physical button on a GPIO pin to control display + backlight:
+
+- Short press: toggle ON/OFF
+- Long press: ON while pressed, OFF when released
+
+Install as a service (default GPIO17):
+
+```bash
+./scripts/screen_control/install-button-screen-service.sh
+```
+
+Customize pin/timing with env vars:
+
+```bash
+GPIO_PIN=27 HOLD_SECONDS=1.0 DEBOUNCE_SECONDS=0.08 ./scripts/screen_control/install-button-screen-service.sh
+```
+
+Direct run without service:
+
+```bash
+python3 ./scripts/screen_control/button_screen_control.py --gpio-pin 17
 ```
 
 Virtual preview (VNC) for remote viewing/debugging:

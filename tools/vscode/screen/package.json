@@ -1,0 +1,78 @@
+{
+  "name": "omv-pinas-screen-preview",
+  "displayName": "OMV PiNAS Screen Preview",
+  "description": "Local VS Code preview of the Freenove dashboard with sample values.",
+  "version": "0.0.9",
+  "publisher": "y0daman",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Y0daman/omv_pinas.git",
+    "directory": "tools/vscode/screen"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:omvPinasScreen.openPreview",
+    "onCommand:omvPinasScreen.openLivePreview",
+    "onView:omvPinasScreen.sidebar",
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "scripts": {
+    "build:vsix": "npx @vscode/vsce package --no-dependencies",
+    "build:vsix:pre": "npx @vscode/vsce package --no-dependencies --pre-release"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.6.2"
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "omvPinasScreen",
+          "title": "Pi Screen",
+          "icon": "media/screen.svg"
+        }
+      ]
+    },
+    "views": {
+      "omvPinasScreen": [
+        {
+          "id": "omvPinasScreen.sidebar",
+          "name": "Screen Preview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "omvPinasScreen.openPreview",
+        "title": "OMV PiNAS: Open Screen Preview"
+      },
+      {
+        "command": "omvPinasScreen.openLivePreview",
+        "title": "OMV PiNAS: Open Live noVNC Preview"
+      }
+    ],
+    "configuration": {
+      "title": "OMV PiNAS Screen Preview",
+      "properties": {
+        "omvPinasScreen.novncUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:6080/vnc.html",
+          "description": "Default noVNC URL for live preview mode."
+        },
+        "omvPinasScreen.iconsPath": {
+          "type": "string",
+          "default": "scripts/freenove/picture/icons",
+          "description": "Path to dashboard PNG icons. Absolute path or workspace-relative."
+        }
+      }
+    }
+  }
+}
