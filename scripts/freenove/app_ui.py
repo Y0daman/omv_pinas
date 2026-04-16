@@ -379,6 +379,36 @@ class MainWindow(QMainWindow):
         self.tab_widget.currentChanged.connect(self.tab_changed_event)
 
     # UI display related signals and slot functions
+    def _get_network_status_display(self):
+        """Return compact network status line with interface type and IP."""
+        ip_addr = self.system_info.get_raspberry_pi_ip_address()
+        if not ip_addr or str(ip_addr).strip() in ["", "N/A", "0.0.0.0"]:
+            return "Offline", "#ff6b6b"
+
+        try:
+            route = subprocess.check_output(
+                ["ip", "route", "show", "default"],
+                text=True,
+                stderr=subprocess.DEVNULL,
+            ).strip()
+        except Exception:
+            route = ""
+
+        iface = "unknown"
+        if route:
+            parts = route.split()
+            if "dev" in parts and parts.index("dev") + 1 < len(parts):
+                iface = parts[parts.index("dev") + 1]
+
+            iface_l = iface.lower()
+            if iface_l.startswith("wl"):
+                return f"WiFi {ip_addr}", "#47d16a"
+            if iface_l.startswith("eth") or iface_l.startswith("en"):
+                return f"LAN {ip_addr}", "#f1c84c"
+            return f"Net {ip_addr}", "#9be7a6"
+
+        return f"Limited {ip_addr}", "#ffd166"
+
     def update_monitor_data_event(self):
         """Periodically update monitor interface display data"""
         try:
@@ -394,6 +424,10 @@ class MainWindow(QMainWindow):
             # Get expansion board information
             rpi_fan_pwm = self.system_info.get_raspberry_pi_fan_duty()      # Raspberry Pi fan PWM
             case_fan_pwm = self.expansion.get_fan_duty()[:2]                # Case fan PWM values
+
+            # Network status line
+            net_text, net_color = self._get_network_status_display()
+            self.monitoring_tab.setNetworkStatus(net_text, net_color)
             
             # Update progress controls
             # CPU usage

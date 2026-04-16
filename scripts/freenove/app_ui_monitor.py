@@ -159,7 +159,7 @@ class MonitoringTab(QWidget):
         # Calculate appropriate control size based on window dimensions
         self.widget_size = min(
             (self.window_width - 35) // self.cols,  # Consider left and right margins
-            (self.window_height - 70) // self.rows # Consider top and bottom margins and other UI elements
+            (self.window_height - 95) // self.rows # Reserve space for network/IP status line
         )
         # Ensure minimum size
         self.widget_size = max(70, self.widget_size)
@@ -181,9 +181,14 @@ class MonitoringTab(QWidget):
         self.grid_layout.setRowStretch(1, 1)         # Equal row heights
         self.grid_layout.setContentsMargins(0, 0, 0, 5)
 
-        self.vbox_layout = QVBoxLayout()             # Create vertical layout
-        self.vbox_layout.addLayout(self.grid_layout) # Add grid layout to vertical layout
-        self.setLayout(self.vbox_layout)             # Set vertical layout as window layout
+        self.network_status_label = QLabel("<span style='color:#9be7a6'>&#9679;</span> Checking...")
+        self.network_status_label.setAlignment(Qt.AlignCenter)
+        self.network_status_label.setStyleSheet("color: #f0f0f0; font-size: 14px; font-weight: bold; padding: 2px;")
+
+        self.vbox_layout = QVBoxLayout()
+        self.vbox_layout.addWidget(self.network_status_label)
+        self.vbox_layout.addLayout(self.grid_layout)
+        self.setLayout(self.vbox_layout)
 
     def closeEvent(self, event):
         """Handle window close event"""
@@ -200,6 +205,10 @@ class MonitoringTab(QWidget):
     def setDefaultCircleProgressColor(self):
         for i in range(len(self.color_combinations)):
             self.setCircleProgressColor(i, self.color_combinations[i])
+
+    def setNetworkStatus(self, text, color="#9be7a6"):
+        self.network_status_label.setText(f"<span style='color:{color}'>&#9679;</span> {text}")
+        self.network_status_label.setStyleSheet("color: #f0f0f0; font-size: 14px; font-weight: bold; padding: 2px;")
 
     def resetUiSize(self, width, height):
         self.window_width = width
@@ -224,7 +233,7 @@ class MonitoringTab(QWidget):
         # Recalculate control size
         self.widget_size = min(
             (self.window_width - 35) // self.cols,
-            (self.window_height - 70) // self.rows
+            (self.window_height - 95) // self.rows
         )
         self.widget_size = max(70, self.widget_size)
         
