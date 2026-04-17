@@ -135,6 +135,12 @@ Check what is possible on your host:
 ./scripts/screen_control/screen_control.sh info
 ./scripts/screen_control/screen_control.sh get
 ./scripts/screen_control/screen_control.sh read
+
+# Set app orientation and print recommended dtoverlay line
+./scripts/screen_control/screen_control.sh set-orientation --orientation 90 --touch-flags swapxy,invy
+
+# Apply dtoverlay directly into /boot/firmware/config.txt
+./scripts/screen_control/screen_control.sh set-orientation --orientation 90 --touch-flags swapxy,invy --apply-boot-config
 ```
 
 Launch dashboard:

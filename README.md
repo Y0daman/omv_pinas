@@ -116,6 +116,13 @@ Large screen dashboard:
 ./scripts/screen_control/screen_control.sh info
 ./scripts/screen_control/screen_control.sh get
 ./scripts/screen_control/screen_control.sh read
+
+# Update app orientation + print recommended config.txt overlay line
+./scripts/screen_control/screen_control.sh set-orientation --orientation 90 --touch-flags swapxy,invy
+
+# Also write overlay line to /boot/firmware/config.txt
+./scripts/screen_control/screen_control.sh set-orientation --orientation 90 --touch-flags swapxy,invy --apply-boot-config
+
 ./scripts/screen_control/screen_control.sh run-dashboard --backend auto
 
 # Boot service on the attached small screen (recommended backend)

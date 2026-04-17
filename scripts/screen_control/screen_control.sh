@@ -17,6 +17,7 @@ Commands:
   read
   status
   info
+  set-orientation
   run-dashboard
   run-monitor
   run-dashboard-virtual
@@ -25,10 +26,15 @@ Commands:
 Options:
   --backend <auto|x11|wayland|eglfs|linuxfb>
   --rotation <0|90|180|270>
+  --orientation <0|90|180|270>
+  --touch-flags <none|invx|invy|swapxy|comma-list>
   --fullscreen
   --virtual-size <WIDTHxHEIGHT|auto>
   --vnc-port <port>
   --code-dir <path>
+  --apply-boot-config
+  --boot-config <path>
+  --overlay <name>
 
 Notes:
   - app_ui.py and app_ui_monitor.py are PyQt5 applications.
@@ -49,8 +55,13 @@ backend="auto"
 fullscreen=0
 code_dir_override=""
 rotation=""
+orientation=""
+touch_flags=""
 virtual_size="auto"
 vnc_port="5901"
+apply_boot_config=0
+boot_config_path="/boot/firmware/config.txt"
+overlay_name="vc4-kms-dsi-ili9881-7inch"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -60,6 +71,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --rotation)
       rotation="${2:-}"
+      shift 2
+      ;;
+    --orientation)
+      orientation="${2:-}"
+      shift 2
+      ;;
+    --touch-flags)
+      touch_flags="${2:-}"
       shift 2
       ;;
     --fullscreen)
@@ -76,6 +95,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --code-dir)
       code_dir_override="${2:-}"
+      shift 2
+      ;;
+    --apply-boot-config)
+      apply_boot_config=1
+      shift
+      ;;
+    --boot-config)
+      boot_config_path="${2:-}"
+      shift 2
+      ;;
+    --overlay)
+      overlay_name="${2:-}"
       shift 2
       ;;
     -h|--help)
@@ -96,6 +127,11 @@ if [[ -n "$rotation" && ! "$rotation" =~ ^(0|90|180|270)$ ]]; then
   exit 1
 fi
 
+if [[ -n "$orientation" && ! "$orientation" =~ ^(0|90|180|270)$ ]]; then
+  echo "--orientation must be one of: 0,90,180,270" >&2
+  exit 1
+fi
+
 if [[ "$virtual_size" != "auto" ]] && [[ ! "$virtual_size" =~ ^[0-9]+x[0-9]+$ ]]; then
   echo "--virtual-size must be WIDTHxHEIGHT or auto" >&2
   exit 1
@@ -105,6 +141,39 @@ if [[ ! "$vnc_port" =~ ^[0-9]+$ ]]; then
   echo "--vnc-port must be numeric" >&2
   exit 1
 fi
+
+normalize_touch_flags() {
+  local raw="$1"
+  if [[ -z "$raw" || "$raw" == "none" ]]; then
+    printf '%s\n' ""
+    return 0
+  fi
+
+  local out=""
+  local token
+  local -a arr=()
+  IFS=',' read -r -a arr <<<"$raw"
+  for token in "${arr[@]}"; do
+    token="${token// /}"
+    case "$token" in
+      invx|invy|swapxy)
+        if [[ -n "$out" ]]; then
+          out+=","
+        fi
+        out+="$token"
+        ;;
+      "") ;;
+      *)
+        echo "--touch-flags supports only: invx,invy,swapxy or none" >&2
+        return 1
+        ;;
+    esac
+  done
+
+  printf '%s\n' "$out"
+}
+
+touch_flags_normalized="$(normalize_touch_flags "$touch_flags")"
 
 resolve_qpa_platform() {
   local requested="$1"
@@ -288,6 +357,93 @@ PY
     echo "- Yes, potentially, via Qt backends like eglfs/linuxfb on a local console (tty)."
     echo "- Over plain SSH (no forwarded display), GUI windows are not visible remotely."
     echo "- OLED and fan/LED control scripts work fully headless."
+    ;;
+
+  set-orientation)
+    if [[ -z "$orientation" ]]; then
+      echo "set-orientation requires --orientation <0|90|180|270>" >&2
+      exit 1
+    fi
+
+    ensure_freenove_config_exists "$code_dir"
+    cfg_file="$(resolve_freenove_config_file "$code_dir")"
+
+    monitor_orientation="0"
+    if [[ "$orientation" == "90" || "$orientation" == "270" ]]; then
+      monitor_orientation="1"
+    fi
+
+    python3 - <<PY
+import json
+from pathlib import Path
+
+cfg = Path("${cfg_file}")
+if not cfg.exists():
+    print(f"Missing config file: {cfg}")
+    raise SystemExit(1)
+
+data = json.loads(cfg.read_text(encoding="utf-8"))
+monitor = data.setdefault("Monitor", {})
+monitor["screen_orientation"] = int("${monitor_orientation}")
+cfg.write_text(json.dumps(data, indent=2), encoding="utf-8")
+print(f"Updated {cfg}")
+print(f"- Monitor.screen_orientation: {monitor['screen_orientation']} (0=landscape, 1=portrait)")
+PY
+
+    if (( apply_boot_config == 1 )); then
+      boot_parent="$(dirname "$boot_config_path")"
+      if [[ ! -d "$boot_parent" ]]; then
+        echo "Parent directory does not exist: $boot_parent" >&2
+        exit 1
+      fi
+
+      if [[ -e "$boot_config_path" && ! -w "$boot_config_path" ]]; then
+        echo "No write access to $boot_config_path (try with sudo)." >&2
+        exit 1
+      fi
+
+      python3 - <<PY
+from pathlib import Path
+
+boot_cfg = Path("${boot_config_path}")
+overlay = "${overlay_name}"
+rotation = "${orientation}"
+touch = "${touch_flags_normalized}"
+
+if boot_cfg.exists():
+    lines = boot_cfg.read_text(encoding="utf-8").splitlines()
+else:
+    lines = []
+
+new_line = f"dtoverlay={overlay},rotation={rotation}"
+if touch:
+    new_line = f"{new_line},{touch}"
+
+replaced = False
+prefix = f"dtoverlay={overlay}"
+for i, line in enumerate(lines):
+    if line.strip().startswith(prefix):
+        lines[i] = new_line
+        replaced = True
+
+if not replaced:
+    lines.append(new_line)
+
+boot_cfg.write_text("\n".join(lines).rstrip("\n") + "\n", encoding="utf-8")
+print(f"Updated {boot_cfg}")
+print(f"- {new_line}")
+PY
+    else
+      echo "Boot config not changed (add --apply-boot-config to update ${boot_config_path})."
+      line="dtoverlay=${overlay_name},rotation=${orientation}"
+      if [[ -n "$touch_flags_normalized" ]]; then
+        line+="${line:+,}${touch_flags_normalized}"
+      fi
+      echo "Recommended config.txt line: $line"
+    fi
+
+    echo "Touch flag hint:" 
+    echo "- Start with none, then try: swapxy, swapxy,invy, or swapxy,invx if touch axis is wrong."
     ;;
 
   run-dashboard|run-monitor|run-dashboard-virtual|run-monitor-virtual)
