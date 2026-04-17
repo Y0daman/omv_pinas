@@ -152,6 +152,22 @@ Launch monitor-only UI:
 ./scripts/screen_control/screen_control.sh run-monitor --backend auto
 ```
 
+Install dashboard as a boot service (systemd):
+
+```bash
+# Recommended for DSI setups: linuxfb backend
+./scripts/screen_control/install-screen-dashboard-service.sh
+
+# Optional: portrait-mounted panel
+SCREEN_ROTATION=90 ./scripts/screen_control/install-screen-dashboard-service.sh
+```
+
+Useful overrides:
+
+```bash
+RUN_USER=jimmy SCREEN_BACKEND=linuxfb SCREEN_CLEAN_STALE=1 ./scripts/screen_control/install-screen-dashboard-service.sh
+```
+
 ## Button-controlled screen power (GPIO)
 
 Use a physical button on a GPIO pin to control display + backlight:

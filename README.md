@@ -118,8 +118,14 @@ Large screen dashboard:
 ./scripts/screen_control/screen_control.sh read
 ./scripts/screen_control/screen_control.sh run-dashboard --backend auto
 
+# Boot service on the attached small screen (recommended backend)
+./scripts/screen_control/install-screen-dashboard-service.sh
+
 # Portrait mounted panel
 ./scripts/screen_control/screen_control.sh run-dashboard --backend eglfs --rotation 90
+
+# Portrait boot service
+SCREEN_ROTATION=90 ./scripts/screen_control/install-screen-dashboard-service.sh
 
 # Virtual preview over VNC (requires xvfb + x11vnc)
 ./scripts/screen_control/screen_control.sh run-dashboard-virtual --virtual-size auto --vnc-port 5901

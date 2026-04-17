@@ -256,6 +256,10 @@ PY
     parse_flags "$@"
     set -- "${REMAINING_ARGS[@]}"
     code_dir="$(resolve_freenove_code_dir "$code_dir_override")"
+    if pgrep -f "task_oled.py" >/dev/null 2>&1; then
+      echo "task_oled.py is already running. Use restart-task if needed."
+      exit 0
+    fi
     (cd "$code_dir" && nohup python3 task_oled.py >/tmp/task_oled.log 2>&1 &)
     echo "Started task_oled.py (logs: /tmp/task_oled.log)"
     ;;

@@ -7,6 +7,8 @@ import atexit
 import signal
 import time
 import sys
+import os
+import fcntl
 
 class OLED_TASK:
 
@@ -17,6 +19,8 @@ class OLED_TASK:
         self.font_size = 12
         self.cleanup_done = False
         self.stop_event = threading.Event()  # Keep for signal handling
+        self.lock_file = None
+        self.lock_path = "/tmp/task_oled.lock"
         
         # Initialize config manager
         self.config_manager = ConfigManager()
@@ -47,6 +51,24 @@ class OLED_TASK:
         atexit.register(self.cleanup)
         signal.signal(signal.SIGTERM, self.handle_signal)
         signal.signal(signal.SIGINT, self.handle_signal)
+        self.acquire_single_instance_lock()
+
+
+    def acquire_single_instance_lock(self):
+        """Ensure only one task_oled.py process controls OLED at a time."""
+        try:
+            self.lock_file = open(self.lock_path, "w")
+            fcntl.flock(self.lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            self.lock_file.seek(0)
+            self.lock_file.truncate()
+            self.lock_file.write(str(os.getpid()))
+            self.lock_file.flush()
+        except BlockingIOError:
+            print("task_oled.py already running; exiting duplicate process")
+            sys.exit(0)
+        except Exception as e:
+            print(f"Failed to acquire lock {self.lock_path}: {e}")
+            sys.exit(1)
 
 
     def get_computer_temperature(self):
@@ -94,6 +116,18 @@ class OLED_TASK:
                 self.oled.close()
         except Exception as e:
             print(e)
+        try:
+            if self.lock_file is not None:
+                fcntl.flock(self.lock_file.fileno(), fcntl.LOCK_UN)
+                self.lock_file.close()
+                self.lock_file = None
+        except Exception:
+            pass
+        try:
+            if os.path.exists(self.lock_path):
+                os.unlink(self.lock_path)
+        except Exception:
+            pass
     def handle_signal(self, signum, frame):
         # Handle signal to stop the application
         self.stop_event.set()
@@ -362,7 +396,6 @@ class OLED_TASK:
 
     def run_oled_loop(self):
         """Main monitoring loop - single-threaded infinite loop for both OLED display and fan control"""
-        oled_counter = 0  # Counter to control OLED update frequency
         screen_start_time = time.time()  # Record the start time of current screen
         current_screen = 0  # Current screen index
         
@@ -386,10 +419,16 @@ class OLED_TASK:
             computer_fan_duty = self.get_computer_fan_duty()
             
             # Get display time configuration for each screen
-            screen1_duration = self.config_manager.get_value('OLED', 'screen1').get('display_time', 3.0)
-            screen2_duration = self.config_manager.get_value('OLED', 'screen2').get('display_time', 3.0)
-            screen3_duration = self.config_manager.get_value('OLED', 'screen3').get('display_time', 3.0)
-            screen4_duration = self.config_manager.get_value('OLED', 'screen4').get('display_time', 3.0)
+            screen1_duration = float(self.config_manager.get_value('OLED', 'screen1').get('display_time', 3.0) or 3.0)
+            screen2_duration = float(self.config_manager.get_value('OLED', 'screen2').get('display_time', 3.0) or 3.0)
+            screen3_duration = float(self.config_manager.get_value('OLED', 'screen3').get('display_time', 3.0) or 3.0)
+            screen4_duration = float(self.config_manager.get_value('OLED', 'screen4').get('display_time', 3.0) or 3.0)
+
+            # Guard against accidental ultra-fast switching caused by invalid values.
+            screen1_duration = max(0.5, screen1_duration)
+            screen2_duration = max(0.5, screen2_duration)
+            screen3_duration = max(0.5, screen3_duration)
+            screen4_duration = max(0.5, screen4_duration)
 
             screen1_is_run_on_oled = self.config_manager.get_value('OLED', 'screen1').get('is_run_on_oled', True)
             screen2_is_run_on_oled = self.config_manager.get_value('OLED', 'screen2').get('is_run_on_oled', True)

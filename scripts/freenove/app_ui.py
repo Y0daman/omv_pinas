@@ -195,22 +195,28 @@ class MainWindow(QMainWindow):
         self.config_manager.set_value('Service', 'is_exist_on_rpi', self.setting_service_is_exist)
         self.config_manager.set_value('Service', 'is_run_on_startup', self.setting_service_is_running)
         
-        #self.showMaximized()
-        self.screen_resolution = QApplication.desktop().screenGeometry()
-        width = self.screen_resolution.width()
-        height = self.screen_resolution.height()
-        #self.showNormal()
+        # Respect configured screen orientation when available.
+        # 0 = landscape, 1 = portrait.
+        configured_direction = self.config_manager.get_value('Monitor', 'screen_orientation')
+        if configured_direction in [0, 1]:
+            self.screen_direction = configured_direction
+        else:
+            self.screen_resolution = QApplication.desktop().screenGeometry()
+            width = self.screen_resolution.width()
+            height = self.screen_resolution.height()
+            if width > height:
+                self.screen_direction = 0
+            else:
+                self.screen_direction = 1
+            self.config_manager.set_value('Monitor', 'screen_orientation', self.screen_direction)
+            self.config_manager.save_config()
 
-        if width > height:
-            self.screen_direction = 0
+        if self.screen_direction == 0:
             self.ui_main_width = 800
             self.ui_main_height = 420
         else:
-            self.screen_direction = 1
             self.ui_main_width = 480
             self.ui_main_height = 740
-        self.config_manager.set_value('Monitor', 'screen_orientation', self.screen_direction)
-        self.config_manager.save_config()
 
         # Load Monitor interface parameters
         self.setFixedSize(self.ui_main_width, self.ui_main_height)
